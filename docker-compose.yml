@@ -1,0 +1,15 @@
+services:
+  supabase:
+    image: supabase/postgres:14.1.0
+    container_name: supabase
+    environment:
+      POSTGRES_PASSWORD: DebmalyaSen
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres.xlzofetwebsolccwktvh
+    ports:
+      - "6543:6543"
+    volumes:
+      - supabase_data:/var/lib/postgresql/data
+
+volumes:
+  supabase_data:
