@@ -6,6 +6,10 @@ export async function POST(request) {
     try {
         const { email, otp } = await request.json();
 
+        console.log('Details:!!!!!!!!!!!!');
+        
+        console.log(email, otp);
+
         if (!client.isOpen) {
             await client.connect();
             console.log('Reconnecting with redis!');
@@ -47,6 +51,8 @@ export async function POST(request) {
 
         await client.del(email);
         await client.del(`${email}_otp`);
+
+        await client.disconnect();
 
         console.log('Successully registered!');
         return NextResponse.json({ success: true, message: 'Successfully registered!' }, { status: 200 });

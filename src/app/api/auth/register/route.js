@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseClient";
 import bcrypt from "bcrypt";
 import client from "@/lib/db";
 import nodemailer from "nodemailer";
@@ -61,12 +60,6 @@ export async function POST(request) {
             console.log("Created new OTP data");
         }
 
-        // const { error: profileError } = await supabase.from('profiles').insert({
-        //     password: hashedPassword,
-        //     name: lowerCaseName,
-        //     email: email,
-        // });
-
         const transporter = nodemailer.createTransport({
             service: 'gmail',
             auth: {
@@ -87,8 +80,6 @@ export async function POST(request) {
         console.log('mail options created!');
         
         await transporter.sendMail(mailOptions);
-
-        await client.disconnect();
 
         return NextResponse.json({ success: true, message: "OTP was sent successfully to your email!" }, { status: 200 });
     } catch (error) {

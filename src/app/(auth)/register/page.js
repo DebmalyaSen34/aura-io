@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
 
@@ -16,12 +17,14 @@ export default function RegisterPage() {
 
     const [error, setError] = useState({});
 
+    const router = useRouter();
+
     const validEmail = (email) => {
         const re = /\S+@\S+\.\S+/;
         return re.test(email);
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         let formErrors = [];
@@ -37,6 +40,31 @@ export default function RegisterPage() {
         setError(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if(response.ok){
+                    console.log('Form submitted successfully', data);
+                    router.push(`/verifyOtp?email=${encodeURIComponent(email)}`);
+                }else{
+                    console.error('Error submitting form:', data);
+                }
+            } catch (error) {
+                console.error('Unexpected Error: ', error);
+            }
             console.log('Form submitted successfully!');
         }
     }
