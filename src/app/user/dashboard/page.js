@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/common/Header";
 import { getReadableDate } from "@/utils/changeDateToReadable";
 import { capitalizeWords } from "@/utils/capitalizeWords";
+import ProfileLoadingScreen from "@/components/profile/profileLoadingScreen";
 
 export default function ProfilePage() {
   const [userProfile, setUserProfile] = useState(null);
@@ -45,8 +46,21 @@ export default function ProfilePage() {
     console.log("Top incidents: ", topIncidents);
   }, [topIncidents]);
 
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      if (response.ok) {
+        window.location.href = "/login";
+      }
+    } catch (error) {
+      console.error("Error logging out", error);
+    }
+  };
+
   if (!userProfile) {
-    return <div>Loading...</div>;
+    return <ProfileLoadingScreen />;
   }
 
   return (
@@ -148,9 +162,7 @@ export default function ProfilePage() {
 
               <Button
                 className="w-full bg-red-500 hover:bg-red-600 text-white"
-                onClick={() => {
-                  /* Handle logout */
-                }}
+                onClick={handleLogout}
               >
                 <LogOut className="w-5 h-5 mr-2" />
                 Logout

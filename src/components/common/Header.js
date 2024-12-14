@@ -15,7 +15,7 @@ export default function Header({ nameSymbol }) {
             Aura.io
           </Link>
         </div>
-        <Link href="/profile">
+        <Link href="/user/dashboard">
           <Avatar className="h-8 w-8 bg-purple-600 hover:bg-purple-500 transition-colors">
             <AvatarFallback>{nameSymbol}</AvatarFallback>
           </Avatar>

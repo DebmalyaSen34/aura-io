@@ -22,16 +22,22 @@ export default function SideMenu() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const handleLogout = () => {
-    // Implement logout logic here
-    console.log("Logging out...");
-    // After logout, redirect to login page
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      if (response.ok) {
+        window.location.href = "/login";
+      }
+    } catch (error) {
+      console.error("Error logging out", error);
+    }
   };
 
   const menuItems = [
     { icon: FileText, label: "Your Incidents", href: "/incidents" },
-    { icon: User, label: "Profile", href: "/profile" },
+    { icon: User, label: "Profile", href: "/user/dashboard" },
     { icon: Heart, label: "Likes", href: "/likes" },
     { icon: MessageSquare, label: "Comments", href: "/comments" },
   ];
