@@ -14,6 +14,7 @@ erDiagram
         string password_hash
         datetime created_at
         int total_aura_points
+        int total_incidents
     }
     INCIDENT {
         int id PK
@@ -21,6 +22,8 @@ erDiagram
         string description
         int aura_points
         datetime created_at
+        int total_likes
+        int total_comments
     }
     COMMENT {
         int id PK
