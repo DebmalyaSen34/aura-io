@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
-import { getUserFromToken } from "@/utils/auth";
 
-async function getIncidents(userId, page = 1, limit = 12) {
+async function getIncidents(page = 1, limit = 12) {
   const offset = (page - 1) * limit;
 
   const { data, error, count } = await supabase
     .from("incident")
     .select("*", { count: "exact" })
-    .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -20,20 +18,11 @@ async function getIncidents(userId, page = 1, limit = 12) {
 
 export async function GET(request) {
   try {
-    const { userId, email } = await getUserFromToken(request);
-
-    if (!userId || !email) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "12");
 
-    const { incidents, total } = await getIncidents(userId, page, limit);
+    const { incidents, total } = await getIncidents(page, limit);
 
     return NextResponse.json(
       {

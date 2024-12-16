@@ -17,6 +17,7 @@ export default function IncidentsPage() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
+  const [totalIncidents, setTotalIncidents] = useState(0);
   const observer = useRef();
   const { toast } = useToast();
 
@@ -45,7 +46,8 @@ export default function IncidentsPage() {
       }
       const data = await response.json();
       if (data.success) {
-        setHasMore(data.incidents.length === INCIDENTS_PER_PAGE);
+        setTotalIncidents(data.pagination.total);
+        setHasMore(pageNumber < data.pagination.totalPages);
         return data.incidents;
       } else {
         throw new Error(data.message || "Failed to fetch incidents");
@@ -214,7 +216,7 @@ export default function IncidentsPage() {
             <p className="text-purple-300">
               {incidents.length === 0
                 ? "You don't have any incidents yet."
-                : "You've reached the end of your incidents."}
+                : `All incidents loaded. Total: ${totalIncidents}`}
             </p>
           </motion.div>
         )}
