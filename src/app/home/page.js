@@ -2,7 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageSquare, PlusCircle } from "lucide-react";
+import {
+  Heart,
+  MessageSquare,
+  PlusCircle,
+  Sparkles,
+  ChevronsUp,
+  ChevronsDown,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,21 +25,23 @@ import {
 import Header from "@/components/common/Header";
 import PostLoader from "@/components/homePage/postLoader";
 import WelcomeCard from "@/components/homePage/WelcomeCard";
-
-// Placeholder components for loading and welcome message
+import AuraPointsAnimation from "@/components/homePage/AuraPointAnimation";
 
 export default function HomePage() {
   const [likedIncidents, setLikedIncidents] = useState(new Set());
+  const [dislikedIncidents, setDislikedIncidents] = useState(new Set());
   const [isNewUser, setIsNewUser] = useState(true);
   const [showAddIncident, setShowAddIncident] = useState(false);
   const [incidents, setIncidents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [newIncident, setNewIncident] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [auraPoints, setAuraPoints] = useState(null);
 
   useEffect(() => {
-    // Simulate API call
     const fetchIncidents = async () => {
       setIsLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       setIncidents([
         {
           id: 1,
@@ -69,11 +78,65 @@ export default function HomePage() {
     });
   };
 
-  const handleAddIncident = (e) => {
+  const toggleDislike = (id) => {
+    setDislikedIncidents((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleAddIncident = async (e) => {
     e.preventDefault();
-    // Here you would typically send the new incident to your backend
-    setShowAddIncident(false);
-    setIsNewUser(false);
+    setIsSubmitting(true);
+    setAuraPoints(null);
+    try {
+      // Get the aura points from the sentiment analysis API
+      const response = await fetch("/api/user/incidents/sentiment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ text: newIncident }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to analyze sentiment");
+      }
+
+      const data = await response.json();
+      setAuraPoints(data.aura);
+      setIsNewUser(false);
+
+      // Push the incident to the database of the user
+      const postIncidentResponse = await fetch(
+        "/api/user/incidents/write-incident",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            description: newIncident,
+            aura_points: data.aura,
+          }),
+        }
+      );
+
+      if (!postIncidentResponse.ok) {
+        throw new Error("Failed to post incident");
+      }
+
+      console.log("Incident added successfully");
+    } catch (error) {
+      console.error("Error adding incident:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -121,18 +184,28 @@ export default function HomePage() {
                           className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors"
                           onClick={() => toggleLike(incident.id)}
                         >
-                          <Heart
+                          <ChevronsUp
                             className={`w-4 h-4 ${
                               likedIncidents.has(incident.id)
                                 ? "fill-current text-purple-400"
                                 : ""
                             }`}
                           />
-                          <span className="text-sm">Like</span>
+                        </button>
+                        <button
+                          className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors"
+                          onClick={() => toggleDislike(incident.id)}
+                        >
+                          <ChevronsDown
+                            className={`w-4 h-4 ${
+                              dislikedIncidents.has(incident.id)
+                                ? "fill-current text-purple-400"
+                                : ""
+                            }`}
+                          />
                         </button>
                         <button className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors">
                           <MessageSquare className="w-4 h-4" />
-                          <span className="text-sm">Comment</span>
                         </button>
                       </div>
                     </CardContent>
@@ -164,12 +237,51 @@ export default function HomePage() {
                 id="incident"
                 placeholder="Describe your life incident..."
                 className="bg-slate-700/50 border-slate-700 text-stone-400"
+                value={newIncident}
+                onChange={(e) => setNewIncident(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
-            <Button type="submit" className="bg-slate-800">
-              Submit Incident
+            <Button
+              type="submit"
+              className="bg-slate-800"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <AuraPointsAnimation />
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Submit Incident
+                </>
+              )}
             </Button>
           </form>
+          {auraPoints !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mt-6 text-center"
+            >
+              <h3 className="text-xl font-semibold text-purple-300 mb-2">
+                Your Aura Points
+              </h3>
+              <div
+                className={`text-4xl font-bold ${
+                  auraPoints > 0 ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {auraPoints > 0 ? "+" : ""}
+                {auraPoints}
+              </div>
+              <p className="mt-2 text-zinc-400">
+                {auraPoints > 0
+                  ? "Positive energy! Keep up the good work!"
+                  : "Negative energy detected. Try to focus on positive actions."}
+              </p>
+            </motion.div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

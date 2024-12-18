@@ -36,10 +36,10 @@ export default function SideMenu() {
   };
 
   const menuItems = [
-    { icon: FileText, label: "Your Incidents", href: "/incidents" },
+    { icon: FileText, label: "Your Incidents", href: "/user/your-incidents" },
     { icon: User, label: "Profile", href: "/user/dashboard" },
-    { icon: Heart, label: "Likes", href: "/likes" },
-    { icon: MessageSquare, label: "Comments", href: "/comments" },
+    { icon: Heart, label: "Likes", href: "/user/your-likes" },
+    { icon: MessageSquare, label: "Comments", href: "/user/your-comments" },
   ];
 
   return (
