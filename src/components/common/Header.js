@@ -9,7 +9,7 @@ export default function Header({ nameSymbol }) {
         <div className="flex items-center space-x-4">
           <SideMenu />
           <Link
-            href="/"
+            href="/home"
             className="text-xl font-semibold text-purple-400 hover:text-purple-300 transition-colors"
           >
             Aura.io

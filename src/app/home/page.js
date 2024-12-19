@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Heart,
   MessageSquare,
   PlusCircle,
   Sparkles,
@@ -24,47 +23,65 @@ import {
 } from "@/components/ui/dialog";
 import Header from "@/components/common/Header";
 import PostLoader from "@/components/homePage/postLoader";
-import WelcomeCard from "@/components/homePage/WelcomeCard";
 import AuraPointsAnimation from "@/components/homePage/AuraPointAnimation";
+import { formatDate } from "@/utils/changeDateToReadable";
+import { capitalizeNames } from "@/utils/capitalizeWords";
+
+const INCIDENTS_PER_PAGE = 6;
 
 export default function HomePage() {
+  const [incidents, setIncidents] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
   const [likedIncidents, setLikedIncidents] = useState(new Set());
   const [dislikedIncidents, setDislikedIncidents] = useState(new Set());
-  const [isNewUser, setIsNewUser] = useState(true);
   const [showAddIncident, setShowAddIncident] = useState(false);
-  const [incidents, setIncidents] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [newIncident, setNewIncident] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [auraPoints, setAuraPoints] = useState(null);
 
-  useEffect(() => {
-    const fetchIncidents = async () => {
-      setIsLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setIncidents([
-        {
-          id: 1,
-          avatar: "A",
-          points: -200,
-          text: "Had an argument with a colleague",
-          liked: false,
-        },
-        {
-          id: 2,
-          avatar: "B",
-          points: 500,
-          text: "Helped an elderly neighbor with groceries",
-          liked: false,
-        },
-      ]);
-      setIsLoading(false);
-    };
+  const observer = useRef();
+  const lastIncidentElementRef = useCallback(
+    (node) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore]
+  );
 
-    if (!isNewUser) {
-      fetchIncidents();
+  const fetchIncidents = async (pageNumber) => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `/api/user/homePage?page=${pageNumber}&limit=${INCIDENTS_PER_PAGE}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch incidents");
+      }
+      const data = await response.json();
+      if (data.success) {
+        setIncidents((prev) => [...prev, ...data.incidents]);
+        setHasMore(data.incidents.length === INCIDENTS_PER_PAGE);
+      } else {
+        throw new Error(data.message || "Failed to fetch incidents");
+      }
+    } catch (error) {
+      console.error("Error fetching incidents:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [isNewUser]);
+  };
+
+  useEffect(() => {
+    fetchIncidents(page);
+  }, [page]);
 
   const toggleLike = (id) => {
     setLikedIncidents((prev) => {
@@ -110,7 +127,6 @@ export default function HomePage() {
 
       const data = await response.json();
       setAuraPoints(data.aura);
-      setIsNewUser(false);
 
       // Push the incident to the database of the user
       const postIncidentResponse = await fetch(
@@ -142,79 +158,117 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-900">
       <Header nameSymbol="A" />
-      <main className="container max-w-lg mx-auto pt-20 px-4">
+      <main className="container max-w-lg mx-auto pt-20 px-4 pb-8">
+        <Button
+          onClick={() => setShowAddIncident(true)}
+          className="mb-6 w-full bg-purple-600 hover:bg-purple-700 text-white"
+        >
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add New Incident
+        </Button>
+
         <AnimatePresence>
-          {isNewUser ? (
-            <WelcomeCard onGetStarted={() => setShowAddIncident(true)} />
-          ) : isLoading ? (
-            <>
-              <PostLoader />
-              <PostLoader />
-            </>
-          ) : (
-            <div className="space-y-4">
-              {incidents.map((incident, index) => (
-                <motion.div
-                  key={incident.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="bg-slate-700/50 border-slate-700">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-8 w-8 bg-purple-600">
-                          <AvatarFallback>{incident.avatar}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-purple-100">{incident.text}</span>
+          {incidents.map((incident, index) => (
+            <motion.div
+              key={incident.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ delay: index * 0.05 }}
+              ref={
+                index === incidents.length - 1 ? lastIncidentElementRef : null
+              }
+            >
+              <Card className="bg-slate-700/50 border-slate-700 mb-4">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-10 w-10 bg-purple-600">
+                      <AvatarFallback>
+                        {incident.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-purple-300">
+                            {capitalizeNames(incident.username)}
+                          </span>
+                          <span className="text-xs text-purple-400">
+                            {formatDate(incident.created_at)}
+                          </span>
+                        </div>
                         <span
-                          className={`ml-auto text-lg font-semibold ${
-                            incident.points > 0
+                          className={`text-lg font-medium ${
+                            incident.aura_points > 0
                               ? "text-green-400"
                               : "text-red-400"
                           }`}
                         >
-                          {incident.points > 0 ? "+" : ""}
-                          {incident.points}
+                          {incident.aura_points > 0 ? "+" : ""}
+                          {incident.aura_points}
                         </span>
                       </div>
-                      <div className="flex gap-4 mt-4">
+                      <p className="mt-2 text-purple-100">
+                        {incident.description}
+                      </p>
+                      <div className="flex items-center gap-4 mt-3 text-purple-300">
                         <button
-                          className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors"
+                          className="flex items-center gap-1 hover:text-purple-100 transition-colors"
                           onClick={() => toggleLike(incident.id)}
                         >
                           <ChevronsUp
-                            className={`w-4 h-4 ${
+                            className={`w-5 h-5 ${
                               likedIncidents.has(incident.id)
-                                ? "fill-current text-purple-400"
+                                ? "text-green-400"
                                 : ""
                             }`}
                           />
+                          <span className="text-sm">
+                            {incident.total_likes || 0}
+                          </span>
                         </button>
                         <button
-                          className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors"
+                          className="flex items-center gap-1 hover:text-purple-100 transition-colors"
                           onClick={() => toggleDislike(incident.id)}
                         >
                           <ChevronsDown
-                            className={`w-4 h-4 ${
+                            className={`w-5 h-5 ${
                               dislikedIncidents.has(incident.id)
-                                ? "fill-current text-purple-400"
+                                ? "text-red-400"
                                 : ""
                             }`}
                           />
+                          <span className="text-sm">
+                            {incident.total_dislikes || 0}
+                          </span>
                         </button>
-                        <button className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-colors">
-                          <MessageSquare className="w-4 h-4" />
+                        <button className="flex items-center gap-1 hover:text-purple-100 transition-colors ml-auto">
+                          <MessageSquare className="w-5 h-5" />
+                          <span className="text-sm">
+                            {incident.total_comments || 0}
+                          </span>
                         </button>
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
         </AnimatePresence>
+
+        {loading && (
+          <div className="space-y-4">
+            <PostLoader />
+            <PostLoader />
+          </div>
+        )}
+
+        {!loading && !hasMore && (
+          <p className="text-center text-purple-300 mt-4">
+            No more incidents to load.
+          </p>
+        )}
       </main>
 
       <Dialog open={showAddIncident} onOpenChange={setShowAddIncident}>

@@ -1,20 +1,47 @@
-import { Avatar } from "../ui/avatar";
-import { Card, CardContent } from "../ui/card";
+import { motion } from "framer-motion";
 
-export default function PostLoader() {
+const PostLoader = () => {
   return (
-    <Card className="bg-slate-700/50 border-slate-700 animate-pulse mt-5">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-4">
-          <Avatar className="h-8 w-8 bg-purple-600" />
-          <span className="text-purple-100 w-32 h-4 bg-gray-600 rounded"></span>
-          <span className="ml-auto text-lg font-semibold w-16 h-4 bg-gray-600 rounded"></span>
-        </div>
-        <div className="flex gap-4 mt-4">
-          <span className="w-24 h-4 bg-gray-600 rounded"></span>
-          <span className="w-24 h-4 bg-gray-600 rounded"></span>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-slate-700/50 border border-slate-700 rounded-lg p-4 mb-4">
+      <div className="flex items-center gap-4 mb-4">
+        <motion.div
+          className="w-8 h-8 bg-purple-600/50 rounded-full"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="h-4 bg-purple-400/30 rounded w-3/4"
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.2,
+          }}
+        />
+      </div>
+      <motion.div
+        className="h-4 bg-purple-400/30 rounded w-full mb-2"
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 0.4,
+        }}
+      />
+      <motion.div
+        className="h-4 bg-purple-400/30 rounded w-2/3"
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 0.6,
+        }}
+      />
+    </div>
   );
-}
+};
+
+export default PostLoader;

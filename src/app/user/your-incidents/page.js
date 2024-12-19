@@ -2,7 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageSquare, Calendar } from "lucide-react";
+import {
+  Heart,
+  MessageSquare,
+  Calendar,
+  ChevronsUp,
+  ChevronsDown,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/common/Header";
@@ -73,15 +79,6 @@ export default function IncidentsPage() {
 
     loadIncidents();
   }, [page]);
-
-  const toggleLike = (id) => {
-    // This is a placeholder. In a real app, you'd call an API to toggle the like status
-    setIncidents((prev) =>
-      prev.map((incident) =>
-        incident.id === id ? { ...incident, liked: !incident.liked } : incident
-      )
-    );
-  };
 
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "short", day: "numeric" };
@@ -155,9 +152,16 @@ export default function IncidentsPage() {
                         variant="ghost"
                         size="sm"
                         className="text-purple-300 hover:text-purple-100"
-                        onClick={() => toggleLike(incident.id)}
                       >
-                        <Heart className="w-5 h-5 fill-purple-400" />
+                        <ChevronsUp className="w-5 h-5 fill-purple-400" />
+                        <span className="ml-1">{incident.total_likes}</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-purple-300 hover:text-purple-100"
+                      >
+                        <ChevronsDown className="w-5 h-5 fill-purple-400" />
                         <span className="ml-1">{incident.total_likes}</span>
                       </Button>
                       <Button

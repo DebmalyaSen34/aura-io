@@ -149,7 +149,7 @@ export default function ProfilePage() {
                                 incident.aura_points >= 0 ? "green" : "red"
                               }-400 font-semibold`}
                             >
-                              {incident.aura_points >= 0 ? "+" : "-"}
+                              {incident.aura_points >= 0 ? "+" : ""}
                               {incident.aura_points}
                             </span>
                           </div>
