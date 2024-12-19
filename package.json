@@ -24,6 +24,7 @@
     "dotenv": "^16.4.5",
     "jose": "^5.9.6",
     "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.462.0",
     "motion": "^11.12.0",
     "next": "15.0.3",

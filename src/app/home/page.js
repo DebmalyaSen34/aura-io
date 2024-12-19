@@ -26,6 +26,7 @@ import PostLoader from "@/components/homePage/postLoader";
 import AuraPointsAnimation from "@/components/homePage/AuraPointAnimation";
 import { formatDate } from "@/utils/changeDateToReadable";
 import { capitalizeNames } from "@/utils/capitalizeWords";
+import { handleVote, getVotesfromCache } from "@/utils/voteHandler";
 
 const INCIDENTS_PER_PAGE = 6;
 
@@ -34,8 +35,7 @@ export default function HomePage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
-  const [likedIncidents, setLikedIncidents] = useState(new Set());
-  const [dislikedIncidents, setDislikedIncidents] = useState(new Set());
+  const [votes, setVotes] = useState({});
   const [showAddIncident, setShowAddIncident] = useState(false);
   const [newIncident, setNewIncident] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,27 +83,21 @@ export default function HomePage() {
     fetchIncidents(page);
   }, [page]);
 
-  const toggleLike = (id) => {
-    setLikedIncidents((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+  useEffect(() => {
+    const cachedVotes = getVotesfromCache();
+    setVotes(cachedVotes);
+  }, []);
 
-  const toggleDislike = (id) => {
-    setDislikedIncidents((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
+  const toggleVote = (id, voteType) => {
+    setVotes((prevVotes) => {
+      const newVotes = { ...prevVotes };
+      if (newVotes[id]?.type === voteType) {
+        delete newVotes[id];
       } else {
-        newSet.add(id);
+        newVotes[id] = { type: voteType };
       }
-      return newSet;
+      handleVote(id, voteType);
+      return newVotes;
     });
   };
 
@@ -214,32 +208,35 @@ export default function HomePage() {
                       <div className="flex items-center gap-4 mt-3 text-purple-300">
                         <button
                           className="flex items-center gap-1 hover:text-purple-100 transition-colors"
-                          onClick={() => toggleLike(incident.id)}
+                          onClick={() => toggleVote(incident.id, "up")}
                         >
                           <ChevronsUp
                             className={`w-5 h-5 ${
-                              likedIncidents.has(incident.id)
+                              votes[incident.id]?.type === "up"
                                 ? "text-green-400"
                                 : ""
                             }`}
                           />
                           <span className="text-sm">
-                            {incident.total_likes || 0}
+                            {incident.total_ups +
+                              (votes[incident.id]?.type === "up" ? 1 : 0) || 0}
                           </span>
                         </button>
                         <button
                           className="flex items-center gap-1 hover:text-purple-100 transition-colors"
-                          onClick={() => toggleDislike(incident.id)}
+                          onClick={() => toggleVote(incident.id, "down")}
                         >
                           <ChevronsDown
                             className={`w-5 h-5 ${
-                              dislikedIncidents.has(incident.id)
+                              votes[incident.id]?.type === "down"
                                 ? "text-red-400"
                                 : ""
                             }`}
                           />
                           <span className="text-sm">
-                            {incident.total_dislikes || 0}
+                            {incident.total_downs +
+                              (votes[incident.id]?.type === "down" ? 1 : 0) ||
+                              0}
                           </span>
                         </button>
                         <button className="flex items-center gap-1 hover:text-purple-100 transition-colors ml-auto">

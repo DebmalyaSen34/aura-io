@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserFromToken } from "@/utils/auth";
+import client from "@/lib/db";
 
 async function getIncidents(page = 1, limit = 6, userId) {
   const offset = (page - 1) * limit;
+  const cacheKey = `incidents:${userId}:${offset}:${limit}`;
+
+  const cachedData = await client.get(cacheKey);
+
+  if (cachedData) {
+    console.log("Used cached Data");
+    return JSON.parse(cachedData);
+  }
+
+  console.log("Used fresh Data");
 
   const { data, error, count } = await supabase
     .from("incident")
@@ -16,7 +27,11 @@ async function getIncidents(page = 1, limit = 6, userId) {
     throw new Error("Server error by supabase");
   }
 
-  return { incidents: data, total: count };
+  const result = { incidents: data, total: count };
+
+  await client.set(cacheKey, JSON.stringify(result), "EX", 60 * 30);
+
+  return result;
 }
 
 export async function GET(request) {
