@@ -88,7 +88,7 @@ export default function HomePage() {
     setVotes(cachedVotes);
   }, []);
 
-  const toggleVote = (id, voteType) => {
+  const toggleVote = async (id, voteType) => {
     setVotes((prevVotes) => {
       const newVotes = { ...prevVotes };
       if (newVotes[id]?.type === voteType) {
@@ -96,9 +96,36 @@ export default function HomePage() {
       } else {
         newVotes[id] = { type: voteType };
       }
-      handleVote(id, voteType);
+      // handleVote(id, voteType);
       return newVotes;
     });
+
+    try {
+      await handleVote(id, voteType);
+
+      setIncidents((prevIncidents) =>
+        prevIncidents.map((incident) =>
+          incident.id === id
+            ? {
+                ...incident,
+                userVote: voteType,
+                total_ups:
+                  incident.total_ups + (voteType === ("up" || true) ? 1 : 0),
+                total_downs:
+                  incident.total_downs +
+                  (voteType === ("down" || false) ? 1 : 0),
+              }
+            : incident
+        )
+      );
+    } catch (error) {
+      console.error("Error while updating vote in database: ", error);
+      setVotes((prevVotes) => {
+        const newVotes = { ...prevVotes };
+        delete newVotes[id];
+        return newVotes;
+      });
+    }
   };
 
   const handleAddIncident = async (e) => {
@@ -218,8 +245,7 @@ export default function HomePage() {
                             }`}
                           />
                           <span className="text-sm">
-                            {incident.total_ups +
-                              (votes[incident.id]?.type === "up" ? 1 : 0) || 0}
+                            {incident.total_ups || 0}
                           </span>
                         </button>
                         <button

@@ -16,7 +16,11 @@ async function getIncidents(page = 1, limit = 6, userId) {
 
   console.log("Used fresh Data");
 
-  const { data, error, count } = await supabase
+  const {
+    data: incidents,
+    error,
+    count,
+  } = await supabase
     .from("incident")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
@@ -24,12 +28,35 @@ async function getIncidents(page = 1, limit = 6, userId) {
     .range(offset, offset + limit - 1);
 
   if (error) {
-    throw new Error("Server error by supabase");
+    throw new Error("Server error by supabase in getting incidents!");
   }
 
-  const result = { incidents: data, total: count };
+  const { data: votes, error: votesError } = await supabase
+    .from("incident_votes")
+    .select("incident_id, vote_type")
+    .eq("user_id", userId)
+    .in(
+      "incident_id",
+      incidents.map((incident) => incident.id)
+    );
 
-  await client.set(cacheKey, JSON.stringify(result), "EX", 60 * 30);
+  if (votesError) {
+    throw new Error("Server error by supabase in getting votes!");
+  }
+
+  const voteMap = votes.reduce((acc, vote) => {
+    acc[vote.incident_id] = vote.vote_type;
+    return acc;
+  }, {});
+
+  const incidentsWithVotes = incidents.map((incident) => ({
+    ...incident,
+    userVote: voteMap[incident.id] || null,
+  }));
+
+  const result = { incidents: incidentsWithVotes, total: count };
+
+  await client.setEx(cacheKey, 300, JSON.stringify(result));
 
   return result;
 }
