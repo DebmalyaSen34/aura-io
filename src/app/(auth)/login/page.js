@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuraLoader from "@/components/common/AuraLoader";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -55,14 +56,14 @@ export default function LoginPage() {
         const data = await response.json();
 
         if (response.ok) {
-          setLogging(false);
-          console.log("logged in successfully", data);
           router.push("/home");
         } else {
           console.error("Error while logging in!", data);
         }
       } catch (error) {
         console.error("Unexpected Error: ", error);
+      } finally {
+        setLogging(false);
       }
       console.log("Logged in successfully!");
     }
@@ -108,7 +109,7 @@ export default function LoginPage() {
               </div>
             </div>
             <Button className="w-full mt-6">
-              {logging ? "Logging you in" : "Login"}
+              {logging ? <AuraLoader /> : "Login"}
             </Button>
           </form>
         </CardContent>

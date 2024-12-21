@@ -99,7 +99,7 @@ export default function ProfilePage() {
                 <div className="bg-slate-600/50 rounded-lg p-4 text-center">
                   <User className="w-6 h-6 mx-auto mb-2 text-purple-300" />
                   <p className="text-lg font-semibold text-purple-100">
-                    {userProfile.total_incidents}
+                    {userProfile.total_incidents || 0}
                   </p>
                   <p className="text-sm text-purple-300">Total Incidents</p>
                 </div>

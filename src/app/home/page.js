@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -300,6 +301,14 @@ export default function HomePage() {
             <DialogTitle className="text-purple-800">
               Add a Life Incident
             </DialogTitle>
+            {/* <DialogClose asChild>
+              <button
+                className="text-red-500 hover:text-red-700 focus:outline-none"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </DialogClose> */}
             <DialogDescription className="text-zinc-300">
               Share what happened in your day. Our AI will evaluate and assign
               an aura value.
@@ -317,8 +326,13 @@ export default function HomePage() {
                 value={newIncident}
                 onChange={(e) => setNewIncident(e.target.value)}
                 disabled={isSubmitting}
+                maxLength={140}
               />
             </div>
+            <p className="text-sm text-red-500">
+              Disclaimer: Your incidents will be shared publicly. So be careful.
+              Don't share anything that may harm anyone else's sentiments.
+            </p>
             <Button
               type="submit"
               className="bg-slate-800"

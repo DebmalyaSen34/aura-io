@@ -12,10 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import AuraLoader from "@/components/common/AuraLoader";
 
 function VerifyPageContent() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   const searchParams = useSearchParams();
@@ -54,21 +56,28 @@ function VerifyPageContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch("/api/auth/verification/verifiyOtp", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, otp: otp.join("") }),
-    });
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/auth/verification/verifiyOtp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, otp: otp.join("") }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      console.log("OTP verification was successful!", data);
-      router.push("/home");
-    } else {
-      console.error("There was an error while verifying OTP: ", data);
+      if (response.ok) {
+        console.log("OTP verification was successful!", data);
+        router.push("/home");
+      } else {
+        console.error("There was an error while verifying OTP: ", data);
+      }
+    } catch (error) {
+      console.error("Error while verifying OTP: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -102,7 +111,7 @@ function VerifyPageContent() {
               })}
             </div>
             <Button type="submit" className="w-full">
-              Verify
+              {isLoading ? <AuraLoader /> : "Verify"}
             </Button>
           </form>
         </CardContent>

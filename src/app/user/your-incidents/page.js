@@ -123,7 +123,7 @@ export default function IncidentsPage() {
                   <div className="flex items-center gap-4 mb-2">
                     <Avatar className="h-10 w-10 bg-purple-600">
                       <AvatarFallback>
-                        {incident.user_id.charAt(0).toUpperCase()}
+                        {incident.username.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -149,22 +149,25 @@ export default function IncidentsPage() {
                     </span>
                     <div className="flex gap-4">
                       <Button
+                        disabled
                         variant="ghost"
                         size="sm"
                         className="text-purple-300 hover:text-purple-100"
                       >
                         <ChevronsUp className="w-5 h-5 fill-purple-400" />
-                        <span className="ml-1">{incident.total_likes}</span>
+                        <span className="ml-1">{incident.total_ups}</span>
                       </Button>
                       <Button
+                        disabled
                         variant="ghost"
                         size="sm"
                         className="text-purple-300 hover:text-purple-100"
                       >
                         <ChevronsDown className="w-5 h-5 fill-purple-400" />
-                        <span className="ml-1">{incident.total_likes}</span>
+                        <span className="ml-1">{incident.total_downs}</span>
                       </Button>
                       <Button
+                        disabled
                         variant="ghost"
                         size="sm"
                         className="text-purple-300 hover:text-purple-100"
