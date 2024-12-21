@@ -43,7 +43,7 @@ erDiagram
     }
     USER ||--o{ INCIDENT : "creates"
     USER ||--o{ COMMENT : "writes"
-    USER ||--o{ LIKE : "gives"
+    USER ||--o{ INCIDENT_VOTES : "gives"
     INCIDENT ||--o{ COMMENT : "has"
-    INCIDENT ||--o{ LIKE : "receives"
+    INCIDENT ||--o{ INCIDENT_VOTES : "receives"
 ```
