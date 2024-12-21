@@ -88,44 +88,47 @@ export default function HomePage() {
     setVotes(cachedVotes);
   }, []);
 
-  const toggleVote = async (id, voteType) => {
+  const toggleVote = (id, voteType) => {
+    const currentVote = votes[id]?.type;
+    const newVoteType = handleVote(id, voteType, currentVote);
+
     setVotes((prevVotes) => {
       const newVotes = { ...prevVotes };
-      if (newVotes[id]?.type === voteType) {
+      if (newVoteType === null) {
         delete newVotes[id];
       } else {
-        newVotes[id] = { type: voteType };
+        newVotes[id] = { type: newVoteType };
       }
       // handleVote(id, voteType);
       return newVotes;
     });
 
-    try {
-      await handleVote(id, voteType);
+    // try {
+    // await handleVote(id, voteType);
 
-      setIncidents((prevIncidents) =>
-        prevIncidents.map((incident) =>
-          incident.id === id
-            ? {
-                ...incident,
-                userVote: voteType,
-                total_ups:
-                  incident.total_ups + (voteType === ("up" || true) ? 1 : 0),
-                total_downs:
-                  incident.total_downs +
-                  (voteType === ("down" || false) ? 1 : 0),
-              }
-            : incident
-        )
-      );
-    } catch (error) {
-      console.error("Error while updating vote in database: ", error);
-      setVotes((prevVotes) => {
-        const newVotes = { ...prevVotes };
-        delete newVotes[id];
-        return newVotes;
-      });
-    }
+    setIncidents((prevIncidents) =>
+      prevIncidents.map((incident) =>
+        incident.id === id
+          ? {
+              ...incident,
+              // userVote: voteType,
+              total_ups:
+                incident.total_ups + (newVoteType === ("up" || true) ? 1 : 0),
+              total_downs:
+                incident.total_downs +
+                (newVoteType === ("down" || false) ? 1 : 0),
+            }
+          : incident
+      )
+    );
+    // } catch (error) {
+    //   console.error("Error while updating vote in database: ", error);
+    //   setVotes((prevVotes) => {
+    //     const newVotes = { ...prevVotes };
+    //     delete newVotes[id];
+    //     return newVotes;
+    //   });
+    // }
   };
 
   const handleAddIncident = async (e) => {
@@ -175,6 +178,8 @@ export default function HomePage() {
       setIsSubmitting(false);
     }
   };
+
+  console.log(votes);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-900">
@@ -239,7 +244,9 @@ export default function HomePage() {
                         >
                           <ChevronsUp
                             className={`w-5 h-5 ${
-                              votes[incident.id]?.type === "up"
+                              incident.userVotes === "up" ||
+                              incident.userVotes === true ||
+                              incident.userVotes === "up"
                                 ? "text-green-400"
                                 : ""
                             }`}
@@ -254,15 +261,15 @@ export default function HomePage() {
                         >
                           <ChevronsDown
                             className={`w-5 h-5 ${
-                              votes[incident.id]?.type === "down"
+                              incident.userVotes === "down" ||
+                              incident.userVotes === false ||
+                              incident.userVotes === "down"
                                 ? "text-red-400"
                                 : ""
                             }`}
                           />
                           <span className="text-sm">
-                            {incident.total_downs +
-                              (votes[incident.id]?.type === "down" ? 1 : 0) ||
-                              0}
+                            {incident.total_downs || 0}
                           </span>
                         </button>
                         <button className="flex items-center gap-1 hover:text-purple-100 transition-colors ml-auto">

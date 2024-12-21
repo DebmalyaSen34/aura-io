@@ -19,7 +19,8 @@ async function fetchWithRetry(url, options, retries = 3, delays = 1000) {
       if (response.ok) {
         return response;
       } else {
-        throw new Error("Request failed");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Request failed");
       }
     } catch (error) {
       if (i < retries - 1) {
@@ -43,18 +44,35 @@ const updateVoteInDatabase = debounce(async (incidentId, voteType) => {
       },
     });
 
-    const cachedVotes = getVotesfromCache();
-    delete cachedVotes[incidentId];
-    setVotesToCache(cachedVotes);
+    const data = await response.json();
+
+    if (data.success) {
+      const cachedVotes = getVotesfromCache();
+      delete cachedVotes[incidentId];
+      setVotesToCache(cachedVotes);
+    } else {
+      throw new Error(data.message || "Error while updating vote in database");
+    }
   } catch (error) {
     console.error("Error while updating vote in database: ", error);
   }
-}, 5000);
+}, 1000);
 
-export const handleVote = (incidentId, voteType) => {
+export const handleVote = (incidentId, voteType, currentVote) => {
   const cachedVotes = getVotesfromCache();
-  cachedVotes[incidentId] = { type: voteType };
+  let newVoteType;
+
+  if (currentVote === voteType) {
+    delete cachedVotes[incidentId];
+    newVoteType = null;
+  } else {
+    cachedVotes[incidentId] = { type: voteType };
+    newVoteType = voteType;
+  }
+
   setVotesToCache(cachedVotes);
 
   updateVoteInDatabase(incidentId, voteType);
+
+  return newVoteType;
 };

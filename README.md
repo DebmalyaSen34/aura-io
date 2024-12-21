@@ -20,9 +20,11 @@ erDiagram
         int id PK
         int user_id FK
         string description
+        string username
         int aura_points
         datetime created_at
-        int total_likes
+        int total_ups
+        int total_downs
         int total_comments
     }
     COMMENT {
@@ -32,10 +34,11 @@ erDiagram
         string content
         datetime created_at
     }
-    LIKE {
+    INCIDENT_VOTES {
         int id PK
         int user_id FK
         int incident_id FK
+        int vote_type
         datetime created_at
     }
     USER ||--o{ INCIDENT : "creates"

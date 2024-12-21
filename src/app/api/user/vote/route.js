@@ -2,16 +2,17 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserFromToken } from "@/utils/auth";
 
-async function giveVotes(incidentId, voteType, userId) {
-  const { data, error } = await supabase.from("incident_votes").insert({
-    incident_id: incidentId,
-    user_id: userId,
-    vote_type: voteType === "up" ? 1 : 0,
+async function updateVote(incidentId, voteType, userId) {
+  const { data, error } = await supabase.rpc("handle_vote", {
+    p_user_id: userId,
+    p_incident_id: incidentId,
+    p_vote_type: voteType === "up" ? 1 : voteType === "down" ? 0 : null,
   });
 
   if (error) {
-    throw new Error("Server error by supabase");
+    throw new Error(`Error while updating vote in database: ${error.message}`);
   }
+
   return data;
 }
 
@@ -31,7 +32,7 @@ export async function POST(request) {
       );
     }
 
-    await giveVotes(incidentId, voteType, userId);
+    await updateVote(incidentId, voteType, userId);
 
     return NextResponse.json(
       {
@@ -45,7 +46,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Error while updating vote in database",
+        message: error.message || "Error while updating vote in database",
       },
       { status: 500 }
     );
