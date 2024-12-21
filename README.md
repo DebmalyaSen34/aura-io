@@ -38,7 +38,7 @@ erDiagram
         int id PK
         int user_id FK
         int incident_id FK
-        int vote_type
+        boolean vote_type
         datetime created_at
     }
     USER ||--o{ INCIDENT : "creates"

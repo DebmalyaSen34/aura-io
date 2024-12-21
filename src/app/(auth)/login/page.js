@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/card";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AuraLoader from "@/components/common/AuraLoader";
+import { motion } from "framer-motion";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -107,8 +109,22 @@ export default function LoginPage() {
                 />
               </div>
             </div>
-            <Button className="w-full mt-6">
-              {logging ? "Logging you in" : "Login"}
+            <Button
+              className="w-full bg-black text-white hover:bg-purple-600 mt-5"
+              onClick={handleSubmit}
+              disabled={logging}
+            >
+              {logging ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <AuraLoader />
+                </motion.div>
+              ) : (
+                "Login"
+              )}
             </Button>
           </form>
         </CardContent>
