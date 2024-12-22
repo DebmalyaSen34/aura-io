@@ -263,9 +263,7 @@ export default function HomePage() {
                             }`}
                           />
                           <span className="text-sm">
-                            {incident.total_downs +
-                              (votes[incident.id]?.type === "down" ? 1 : 0) ||
-                              0}
+                            {incident.total_downs || 0}
                           </span>
                         </button>
                         {/* Implement the comment feature later */}
