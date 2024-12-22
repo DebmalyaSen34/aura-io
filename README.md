@@ -1,4 +1,14 @@
 # Aura
+![Vercel](https://img.shields.io/badge/vercel-%23000000.svg?style=for-the-badge&logo=vercel&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-v14+-green.svg?style=for-the-badge)
+![Next.js](https://img.shields.io/badge/Next.js-v13+-blueviolet.svg?style=for-the-badge)
+![React](https://img.shields.io/badge/React-v18+-blue.svg?style=for-the-badge)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v3.0+-38B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-FFAE33?style=for-the-badge&logo=huggingface&logoColor=black)
+![Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=for-the-badge)
+![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=for-the-badge)
 
 ## Table of Contents
 - [Aura](#aura)
