@@ -8,12 +8,14 @@ import {
   Calendar,
   ChevronsUp,
   ChevronsDown,
+  Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/common/Header";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { formatDateBetter } from "@/utils/changeDateToReadable";
 
 const INCIDENTS_PER_PAGE = 10;
 
@@ -80,9 +82,25 @@ export default function IncidentsPage() {
     loadIncidents();
   }, [page]);
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  const handleDeleteIncident = async (incidentId) => {
+    try {
+      const response = await fetch(
+        `/api/user/incidents/delete-incident/${incidentId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete incident");
+      } else {
+        setIncidents((prev) =>
+          prev.filter((incident) => incident.id !== incidentId)
+        );
+      }
+    } catch (error) {
+      console.error("Error while deleting incident: ", error);
+    }
   };
 
   if (error) {
@@ -132,7 +150,7 @@ export default function IncidentsPage() {
                       </p>
                       <p className="text-purple-300 text-sm flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
-                        {formatDate(incident.created_at)}
+                        {formatDateBetter(incident.created_at)}
                       </p>
                     </div>
                   </div>
@@ -166,7 +184,8 @@ export default function IncidentsPage() {
                         <ChevronsDown className="w-5 h-5 fill-purple-400" />
                         <span className="ml-1">{incident.total_downs}</span>
                       </Button>
-                      <Button
+                      {/* Implement the comment feature later */}
+                      {/* <Button
                         disabled
                         variant="ghost"
                         size="sm"
@@ -174,6 +193,15 @@ export default function IncidentsPage() {
                       >
                         <MessageSquare className="w-5 h-5" />
                         <span className="ml-1">{incident.total_comments}</span>
+                      </Button> */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-300 hover:text-white"
+                        hoverColor="red-600"
+                        onClick={() => handleDeleteIncident(incident.id)}
+                      >
+                        <Trash2 className="w-5 h-5" />
                       </Button>
                     </div>
                   </div>

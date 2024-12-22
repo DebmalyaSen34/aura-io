@@ -45,6 +45,7 @@ export default function SideMenu() {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
+          hoverColor="slate-300"
           size="icon"
           className="text-slate-400 hover:text-purple-500"
         >

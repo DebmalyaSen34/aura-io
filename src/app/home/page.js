@@ -8,6 +8,7 @@ import {
   Sparkles,
   ChevronsUp,
   ChevronsDown,
+  Calendar,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
 import Header from "@/components/common/Header";
 import PostLoader from "@/components/homePage/postLoader";
 import AuraPointsAnimation from "@/components/homePage/AuraPointAnimation";
-import { formatDate } from "@/utils/changeDateToReadable";
+import { formatDateBetter } from "@/utils/changeDateToReadable";
 import { capitalizeNames } from "@/utils/capitalizeWords";
 import { handleVote, getVotesfromCache } from "@/utils/voteHandler";
 
@@ -192,7 +193,7 @@ export default function HomePage() {
         <AnimatePresence>
           {incidents.map((incident, index) => (
             <motion.div
-              key={incident.id}
+              key={`${incident.id} - ${index}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -215,8 +216,9 @@ export default function HomePage() {
                           <span className="text-sm font-medium text-purple-300">
                             {capitalizeNames(incident.username)}
                           </span>
-                          <span className="text-xs text-purple-400">
-                            {formatDate(incident.created_at)}
+                          <span className="text-sm text-slate-400 flex items-center">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            {formatDateBetter(incident.created_at)}
                           </span>
                         </div>
                         <span
@@ -266,12 +268,13 @@ export default function HomePage() {
                               0}
                           </span>
                         </button>
-                        <button className="flex items-center gap-1 hover:text-purple-100 transition-colors ml-auto">
+                        {/* Implement the comment feature later */}
+                        {/* <button className="flex items-center gap-1 hover:text-purple-100 transition-colors ml-auto">
                           <MessageSquare className="w-5 h-5" />
                           <span className="text-sm">
                             {incident.total_comments || 0}
                           </span>
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>
@@ -301,14 +304,6 @@ export default function HomePage() {
             <DialogTitle className="text-purple-800">
               Add a Life Incident
             </DialogTitle>
-            {/* <DialogClose asChild>
-              <button
-                className="text-red-500 hover:text-red-700 focus:outline-none"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </DialogClose> */}
             <DialogDescription className="text-zinc-300">
               Share what happened in your day. Our AI will evaluate and assign
               an aura value.
