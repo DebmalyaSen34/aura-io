@@ -45,6 +45,9 @@
       - [Usage](#usage-3)
       - [Example Code](#example-code-3)
       - [Caching Incident Data:](#caching-incident-data-1)
+  - [Data Visualisation](#data-visualisation)
+    - [1. Incidents Overview Chart](#1-incidents-overview-chart)
+    - [2. Aura Journey Chart](#2-aura-journey-chart)
   - [Contributing](#contributing)
 
 ## Introduction
@@ -459,6 +462,28 @@ export function removeToken() {
   localStorage.removeItem('authToken');
 }
 ```
+
+## Data Visualisation
+
+### 1. Incidents Overview Chart
+
+- **Type**: Line Chart
+- **Data**: Number of incidents over the last 7 days
+- **Features**:
+  - Smooth trend visualization
+  - Responsive design
+  - Interactive tooltips with daily incident counts
+
+### 2. Aura Journey Chart
+
+- **Type**: Combined Area and Line Chart
+- **Data**: Positive, negative, and total aura points over the last 7 days
+- **Features**:
+  - Area chart for positive/negative aura
+  - Line chart for total aura
+  - Gradient fills for visual appeal
+  - Reference line at y=0
+  - Comprehensive legend
 
 ## Contributing
 
