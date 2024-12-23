@@ -28,7 +28,17 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  ResponsiveContainer,
+  Line,
+  LineChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  AreaChart,
+  ReferenceLine,
+  Area,
+} from "recharts";
 import Header from "@/components/common/Header";
 import { getReadableDate } from "@/utils/changeDateToReadable";
 import { capitalizeWords } from "@/utils/capitalizeWords";
@@ -48,13 +58,17 @@ const chartConfig = {
     label: "Incidents",
     color: "hsl(259, 94%, 67%)",
   },
-  desktop: {
-    label: "Desktop",
-    color: "hsl(var(--chart-1))",
+  pos_aura: {
+    label: "+ve Aura",
+    color: "hsl(143, 55%, 62%)",
   },
-  mobile: {
-    label: "Mobile",
-    color: "hsl(var(--chart-2))",
+  neg_aura: {
+    label: "-ve Aura",
+    color: "hsl(346, 87%, 60%)",
+  },
+  total_aura: {
+    label: "Total Aura",
+    color: "hsl(230, 100%, 69%)",
   },
 };
 
@@ -73,6 +87,9 @@ export default function ProfilePage() {
       return {
         date: date.toISOString().split("T")[0],
         incidents: 0,
+        pos_aura: 0,
+        neg_aura: 0,
+        total_aura: 0,
       };
     });
 
@@ -83,10 +100,15 @@ export default function ProfilePage() {
       const dayData = last7Days.find((day) => day.date === incidentDate);
       if (dayData) {
         dayData.incidents += 1;
+        if (incident.aura_points >= 0) {
+          dayData.pos_aura += incident.aura_points;
+        } else {
+          dayData.neg_aura += Math.abs(incident.aura_points);
+        }
+        dayData.total_aura += incident.aura_points;
       }
     });
 
-    console.log("Last 7 days: ", last7Days);
     return last7Days;
   };
 
@@ -256,36 +278,33 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-white">Incidents Overview</CardTitle>
               <CardDescription className="text-purple-300">
-                December 17 - December 23
+                Last 7 Days
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig}>
-                <BarChart accessibilityLayer data={weeklyIncidents}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={10}
-                    tickFormatter={(value) => value.slice(8, 10)}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={10}
-                    tickCount={3}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dashed" />}
-                  />
-                  <Bar
-                    dataKey="incidents"
-                    fill="var(--color-incidents)"
-                    radius={4}
-                  />
-                </BarChart>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={weeklyIncidents}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={10}
+                      tickFormatter={(value) => value.slice(5)}
+                    />
+                    <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="incidents"
+                      stroke="var(--color-incidents)"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 text-sm">
@@ -299,35 +318,80 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-white">Aura Journey</CardTitle>
               <CardDescription className="text-purple-300">
-                December 17 - December 23
+                Last 7 Days
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig}>
-                <BarChart accessibilityLayer data={chartData}>
-                  <CartesianGrid vertical={false} />
+                <AreaChart data={weeklyIncidents} height={300}>
+                  <defs>
+                    <linearGradient
+                      id="colorPosAura"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-pos_aura)"
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-pos_aura)"
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                    <linearGradient
+                      id="colorNegAura"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-neg_aura)"
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-neg_aura)"
+                        stopOpacity={0}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
-                    dataKey="month"
+                    dataKey="date"
                     tickLine={false}
                     tickMargin={10}
                     axisLine={false}
-                    tickFormatter={(value) => value.slice(0, 3)}
+                    tickFormatter={(value) => value.slice(5)}
                   />
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Bar
-                    dataKey="desktop"
-                    stackId="a"
-                    fill="var(--color-desktop)"
-                    radius={[0, 0, 4, 4]}
+                  <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend
+                    className="text-white"
+                    content={<ChartLegendContent />}
                   />
-                  <Bar
-                    dataKey="mobile"
-                    stackId="a"
-                    fill="var(--color-mobile)"
-                    radius={[4, 4, 0, 0]}
+                  <ReferenceLine y={0} stroke="#666" />
+                  <Area
+                    type="monotone"
+                    dataKey="pos_aura"
+                    stroke="var(--color-pos_aura)"
+                    fillOpacity={1}
+                    fill="url(#colorPosAura)"
                   />
-                </BarChart>
+                  <Area
+                    type="monotone"
+                    dataKey="neg_aura"
+                    stroke="var(--color-neg_aura)"
+                    fillOpacity={1}
+                    fill="url(#colorNegAura)"
+                  />
+                </AreaChart>
               </ChartContainer>
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 text-sm">
