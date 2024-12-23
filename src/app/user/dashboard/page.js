@@ -9,9 +9,12 @@ import {
   Calendar,
   Zap,
   Award,
-  TrendingUp,
+  Edit2,
+  Check,
+  X,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -43,6 +46,8 @@ import Header from "@/components/common/Header";
 import { getReadableDate } from "@/utils/changeDateToReadable";
 import { capitalizeWords } from "@/utils/capitalizeWords";
 import ProfileLoadingScreen from "@/components/profile/profileLoadingScreen";
+import { useToast } from "@/hooks/use-toast";
+import { set } from "lodash";
 
 const chartData = [
   { month: "January", desktop: 186, mobile: 80 },
@@ -78,6 +83,9 @@ export default function ProfilePage() {
   const [weeklyIncidents, setWeeklyIncidents] = useState([]);
   const [topIncidents, setTopIncidents] = useState(null);
   const [showTopIncidents, setShowTopIncidents] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [isEditingName, setIsEditingName] = useState(false);
+  const { toast } = useToast();
 
   const processIncidentsForLast7Days = (incidents) => {
     const today = new Date();
@@ -164,6 +172,52 @@ export default function ProfilePage() {
     }
   };
 
+  const handleEditName = () => {
+    setNewName(userProfile.name);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    try {
+      const response = await fetch("/api/user/getDetails/rename", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ newName }),
+      });
+
+      if (response.ok) {
+        setUserProfile((prev) => ({ ...prev, name: newName }));
+        setIsEditingName(false);
+        toast({
+          title: "Name updated successfully",
+          description: `Your name has been updated successfully to ${newName}`,
+          status: "success",
+        });
+      } else {
+        toast({
+          title: "Failed to update name",
+          description: "Failed to update name. Please try again later",
+          status: "error",
+        });
+        throw new Error("Failed to update name");
+      }
+    } catch (error) {
+      console.error("Error updating name", error);
+      toast({
+        title: "Failed to update name",
+        description: "Failed to update name. Please try again later",
+        status: "error",
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setNewName("");
+  };
+
   if (!userProfile) {
     return <ProfileLoadingScreen />;
   }
@@ -189,10 +243,46 @@ export default function ProfilePage() {
                     {capitalizeWords(userProfile.name[0])}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h1 className="text-2xl font-bold text-purple-100">
-                    {capitalizeWords(userProfile.name)}
-                  </h1>
+                <div className="flex-grow">
+                  {isEditingName ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        className="bg-slate-600 text-purple-100 border-slate-500"
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleSaveName}
+                        className="text-green-400 hover:text-green-300 hover:bg-green-400/20"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleCancelEdit}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-400/20"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-2xl font-bold text-purple-100">
+                        {capitalizeWords(userProfile.name)}
+                      </h1>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleEditName}
+                        className="text-purple-300 hover:text-purple-200 hover:bg-purple-400/20"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-purple-300 flex items-center">
                     <Calendar className="w-4 h-4 mr-2" />
                     Joined {getReadableDate(userProfile.created_at)}
