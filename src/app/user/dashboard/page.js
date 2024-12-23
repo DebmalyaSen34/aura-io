@@ -2,19 +2,93 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, LogOut, User, Calendar, Zap, Award } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  User,
+  Calendar,
+  Zap,
+  Award,
+  TrendingUp,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import Header from "@/components/common/Header";
 import { getReadableDate } from "@/utils/changeDateToReadable";
 import { capitalizeWords } from "@/utils/capitalizeWords";
 import ProfileLoadingScreen from "@/components/profile/profileLoadingScreen";
 
+const chartData = [
+  { month: "January", desktop: 186, mobile: 80 },
+  { month: "February", desktop: 305, mobile: 200 },
+  { month: "March", desktop: 237, mobile: 120 },
+  { month: "April", desktop: 73, mobile: 190 },
+  { month: "May", desktop: 209, mobile: 130 },
+  { month: "June", desktop: 214, mobile: 140 },
+];
+
+const chartConfig = {
+  incidents: {
+    label: "Incidents",
+    color: "hsl(259, 94%, 67%)",
+  },
+  desktop: {
+    label: "Desktop",
+    color: "hsl(var(--chart-1))",
+  },
+  mobile: {
+    label: "Mobile",
+    color: "hsl(var(--chart-2))",
+  },
+};
+
 export default function ProfilePage() {
   const [userProfile, setUserProfile] = useState(null);
+  const [incidents, setIncidents] = useState([]);
+  const [weeklyIncidents, setWeeklyIncidents] = useState([]);
   const [topIncidents, setTopIncidents] = useState(null);
   const [showTopIncidents, setShowTopIncidents] = useState(false);
+
+  const processIncidentsForLast7Days = (incidents) => {
+    const today = new Date();
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (6 - i));
+      return {
+        date: date.toISOString().split("T")[0],
+        incidents: 0,
+      };
+    });
+
+    incidents.forEach((incident) => {
+      const incidentDate = new Date(incident.created_at)
+        .toISOString()
+        .split("T")[0];
+      const dayData = last7Days.find((day) => day.date === incidentDate);
+      if (dayData) {
+        dayData.incidents += 1;
+      }
+    });
+
+    console.log("Last 7 days: ", last7Days);
+    return last7Days;
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -30,6 +104,7 @@ export default function ProfilePage() {
       try {
         const response = await fetch("/api/user/incidents/getIncidents");
         const data = await response.json();
+        setIncidents(data.incidents);
         const sortedIncidents = data.incidents.sort(
           (a, b) => b.aura_points - a.aura_points
         );
@@ -38,13 +113,21 @@ export default function ProfilePage() {
         console.log("Error fetching user incidents", error);
       }
     };
-    fetchUserProfile();
-    fetchUserIncidents();
+
+    const fetchData = async () => {
+      await Promise.all([fetchUserProfile(), fetchUserIncidents()]);
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
-    console.log("Top incidents: ", topIncidents);
-  }, [topIncidents]);
+    if (incidents.length > 0) {
+      const processedData = processIncidentsForLast7Days(incidents);
+      setWeeklyIncidents(processedData);
+    }
+    console.log("Incidents: ", incidents);
+  }, [incidents]);
 
   const handleLogout = async () => {
     try {
@@ -168,6 +251,90 @@ export default function ProfilePage() {
                 Logout
               </Button>
             </CardContent>
+          </Card>
+          <Card className="bg-slate-700/50 border-slate-700 overflow-hidden mt-5">
+            <CardHeader>
+              <CardTitle className="text-white">Incidents Overview</CardTitle>
+              <CardDescription className="text-purple-300">
+                December 17 - December 23
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig}>
+                <BarChart accessibilityLayer data={weeklyIncidents}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={10}
+                    tickFormatter={(value) => value.slice(8, 10)}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tickMargin={10}
+                    tickCount={3}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dashed" />}
+                  />
+                  <Bar
+                    dataKey="incidents"
+                    fill="var(--color-incidents)"
+                    radius={4}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-2 text-sm">
+              <div className="leading-none text-muted-foreground">
+                Showing total incidents for the last 7 days
+              </div>
+            </CardFooter>
+          </Card>
+
+          <Card className="mt-5 bg-slate-700/50 border-slate-700 overflow-hidden">
+            <CardHeader>
+              <CardTitle className="text-white">Aura Journey</CardTitle>
+              <CardDescription className="text-purple-300">
+                December 17 - December 23
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig}>
+                <BarChart accessibilityLayer data={chartData}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tickLine={false}
+                    tickMargin={10}
+                    axisLine={false}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Bar
+                    dataKey="desktop"
+                    stackId="a"
+                    fill="var(--color-desktop)"
+                    radius={[0, 0, 4, 4]}
+                  />
+                  <Bar
+                    dataKey="mobile"
+                    stackId="a"
+                    fill="var(--color-mobile)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-2 text-sm">
+              <div className="leading-none text-muted-foreground">
+                Showing your Aura points for the last 7 days
+              </div>
+            </CardFooter>
           </Card>
         </motion.div>
       </main>
