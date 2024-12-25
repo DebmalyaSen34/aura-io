@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -68,7 +68,7 @@ const chartConfig = {
   },
 };
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const [userProfile, setUserProfile] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [weeklyIncidents, setWeeklyIncidents] = useState([]);
@@ -508,5 +508,13 @@ export default function ProfilePage() {
         </motion.div>{" "}
       </main>{" "}
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfileLoadingScreen />}>
+      <ProfilePageContent />
+    </Suspense>
   );
 }
