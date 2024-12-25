@@ -30,10 +30,13 @@ export async function GET(request) {
     }
 
     const url = new URL(request.url);
+    const otherUserId = url.searchParams.get("userId");
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "12");
 
-    const { incidents, total } = await getIncidents(userId, page, limit);
+    const { incidents, total } = otherUserId
+      ? await getIncidents(otherUserId, page, limit)
+      : await getIncidents(userId, page, limit);
 
     return NextResponse.json(
       {

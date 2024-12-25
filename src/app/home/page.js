@@ -29,6 +29,7 @@ import AuraPointsAnimation from "@/components/homePage/AuraPointAnimation";
 import { formatDateBetter } from "@/utils/changeDateToReadable";
 import { capitalizeNames } from "@/utils/capitalizeWords";
 import { handleVote, getVotesfromCache } from "@/utils/voteHandler";
+import { useRouter } from "next/navigation";
 
 const INCIDENTS_PER_PAGE = 6;
 
@@ -42,6 +43,7 @@ export default function HomePage() {
   const [newIncident, setNewIncident] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [auraPoints, setAuraPoints] = useState(null);
+  const router = useRouter();
 
   const observer = useRef();
   const lastIncidentElementRef = useCallback(
@@ -178,6 +180,10 @@ export default function HomePage() {
     }
   };
 
+  const handleAvatarClick = (userId) => {
+    router.push(`/user/dashboard?userId=${userId}`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-900">
       <Header nameSymbol="A" />
@@ -205,7 +211,10 @@ export default function HomePage() {
               <Card className="bg-slate-700/50 border-slate-700 mb-4">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <Avatar className="h-10 w-10 bg-purple-600">
+                    <Avatar
+                      className="h-10 w-10 bg-purple-600 cursor-pointer"
+                      onClick={() => handleAvatarClick(incident.user_id)}
+                    >
                       <AvatarFallback>
                         {incident.username.charAt(0).toUpperCase()}
                       </AvatarFallback>

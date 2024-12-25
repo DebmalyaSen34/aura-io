@@ -47,16 +47,7 @@ import { getReadableDate } from "@/utils/changeDateToReadable";
 import { capitalizeWords } from "@/utils/capitalizeWords";
 import ProfileLoadingScreen from "@/components/profile/profileLoadingScreen";
 import { useToast } from "@/hooks/use-toast";
-import { set } from "lodash";
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
+import { useSearchParams } from "next/navigation";
 
 const chartConfig = {
   incidents: {
@@ -86,6 +77,11 @@ export default function ProfilePage() {
   const [newName, setNewName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+
+  const otherUserId = searchParams.get("userId");
+
+  console.log("Other User ID: ", otherUserId);
 
   const processIncidentsForLast7Days = (incidents) => {
     const today = new Date();
@@ -123,7 +119,11 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await fetch("/api/user/getDetails");
+        const response = await fetch(
+          otherUserId
+            ? `/api/user/getDetails?userId=${otherUserId}`
+            : "/api/user/getDetails"
+        );
         const data = await response.json();
         setUserProfile(data.user);
       } catch (error) {
@@ -132,8 +132,13 @@ export default function ProfilePage() {
     };
     const fetchUserIncidents = async () => {
       try {
-        const response = await fetch("/api/user/incidents/getIncidents");
+        const response = await fetch(
+          otherUserId
+            ? `/api/user/incidents/getIncidents?userId=${otherUserId}`
+            : "/api/user/incidents/getIncidents"
+        );
         const data = await response.json();
+        console.log("User Incidents data: ", otherUserId, data);
         setIncidents(data.incidents);
         const sortedIncidents = data.incidents.sort(
           (a, b) => b.aura_points - a.aura_points
@@ -145,11 +150,13 @@ export default function ProfilePage() {
     };
 
     const fetchData = async () => {
+      setIncidents([]);
+      setWeeklyIncidents([]);
       await Promise.all([fetchUserProfile(), fetchUserIncidents()]);
     };
 
     fetchData();
-  }, []);
+  }, [otherUserId]);
 
   useEffect(() => {
     if (incidents.length > 0) {
@@ -224,7 +231,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-900">
-      <Header nameSymbol={capitalizeWords(userProfile.name[0])} />
+      <Header nameSymbol={capitalizeWords(userProfile.name[0])} />{" "}
       <main className="container max-w-lg mx-auto pt-20 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -238,12 +245,14 @@ export default function ProfilePage() {
                   <AvatarImage
                     src={userProfile.avatar}
                     alt={userProfile.name}
-                  />
+                  />{" "}
                   <AvatarFallback>
-                    {capitalizeWords(userProfile.name[0])}
-                  </AvatarFallback>
-                </Avatar>
+                    {" "}
+                    {capitalizeWords(userProfile.name[0])}{" "}
+                  </AvatarFallback>{" "}
+                </Avatar>{" "}
                 <div className="flex-grow">
+                  {" "}
                   {isEditingName ? (
                     <div className="flex items-center gap-2">
                       <Input
@@ -258,7 +267,7 @@ export default function ProfilePage() {
                         className="text-green-400 hover:text-green-300 hover:bg-green-400/20"
                       >
                         <Check className="h-4 w-4" />
-                      </Button>
+                      </Button>{" "}
                       <Button
                         size="icon"
                         variant="ghost"
@@ -266,47 +275,50 @@ export default function ProfilePage() {
                         className="text-red-400 hover:text-red-300 hover:bg-red-400/20"
                       >
                         <X className="h-4 w-4" />
-                      </Button>
+                      </Button>{" "}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <h1 className="text-2xl font-bold text-purple-100">
-                        {capitalizeWords(userProfile.name)}
-                      </h1>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={handleEditName}
-                        className="text-purple-300 hover:text-purple-200 hover:bg-purple-400/20"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
+                        {" "}
+                        {capitalizeWords(userProfile.name)}{" "}
+                      </h1>{" "}
+                      {otherUserId ? null : (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={handleEditName}
+                          className="text-purple-300 hover:text-purple-200 hover:bg-purple-400/20"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                  )}
+                  )}{" "}
                   <p className="text-purple-300 flex items-center">
                     <Calendar className="w-4 h-4 mr-2" />
-                    Joined {getReadableDate(userProfile.created_at)}
-                  </p>
-                </div>
-              </div>
-
+                    Joined {getReadableDate(userProfile.created_at)}{" "}
+                  </p>{" "}
+                </div>{" "}
+              </div>{" "}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-slate-600/50 rounded-lg p-4 text-center">
                   <User className="w-6 h-6 mx-auto mb-2 text-purple-300" />
                   <p className="text-lg font-semibold text-purple-100">
-                    {userProfile.total_incidents || 0}
-                  </p>
-                  <p className="text-sm text-purple-300">Total Incidents</p>
-                </div>
+                    {" "}
+                    {userProfile.total_incidents || 0}{" "}
+                  </p>{" "}
+                  <p className="text-sm text-purple-300"> Total Incidents </p>{" "}
+                </div>{" "}
                 <div className="bg-slate-600/50 rounded-lg p-4 text-center">
                   <Zap className="w-6 h-6 mx-auto mb-2 text-purple-300" />
                   <p className="text-lg font-semibold text-purple-100">
-                    {userProfile.total_aura_points}
-                  </p>
-                  <p className="text-sm text-purple-300">Aura Points</p>
-                </div>
-              </div>
-
+                    {" "}
+                    {userProfile.total_aura_points}{" "}
+                  </p>{" "}
+                  <p className="text-sm text-purple-300"> Aura Points </p>{" "}
+                </div>{" "}
+              </div>{" "}
               <div className="mb-6">
                 <Button
                   onClick={() => setShowTopIncidents(!showTopIncidents)}
@@ -314,15 +326,16 @@ export default function ProfilePage() {
                 >
                   <span className="flex items-center">
                     <Award className="w-5 h-5 mr-2" />
-                    Top Incidents
-                  </span>
+                    Top Incidents{" "}
+                  </span>{" "}
                   <ChevronDown
                     className={`w-5 h-5 transition-transform ${
                       showTopIncidents ? "rotate-180" : ""
                     }`}
-                  />
-                </Button>
+                  />{" "}
+                </Button>{" "}
                 <AnimatePresence>
+                  {" "}
                   {showTopIncidents && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
@@ -331,46 +344,49 @@ export default function ProfilePage() {
                       transition={{ duration: 0.3 }}
                     >
                       <div className="mt-4 space-y-2">
+                        {" "}
                         {topIncidents.map((incident) => (
                           <div
                             key={incident.id}
                             className="bg-slate-600/30 rounded-lg p-3 flex justify-between items-center"
                           >
                             <p className="text-purple-100">
-                              {incident.description}
-                            </p>
+                              {" "}
+                              {incident.description}{" "}
+                            </p>{" "}
                             <span
                               className={`text-${
                                 incident.aura_points >= 0 ? "green" : "red"
                               }-400 font-semibold`}
                             >
-                              {incident.aura_points >= 0 ? "+" : ""}
-                              {incident.aura_points}
-                            </span>
+                              {incident.aura_points >= 0 ? "+" : ""}{" "}
+                              {incident.aura_points}{" "}
+                            </span>{" "}
                           </div>
-                        ))}
-                      </div>
+                        ))}{" "}
+                      </div>{" "}
                     </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <Button
-                className="w-full bg-red-500 hover:bg-red-600 text-white"
-                onClick={handleLogout}
-              >
-                <LogOut className="w-5 h-5 mr-2" />
-                Logout
-              </Button>
-            </CardContent>
-          </Card>
+                  )}{" "}
+                </AnimatePresence>{" "}
+              </div>{" "}
+              {otherUserId ? null : (
+                <Button
+                  className="w-full bg-red-500 hover:bg-red-600 text-white"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-5 h-5 mr-2" />
+                  Logout
+                </Button>
+              )}
+            </CardContent>{" "}
+          </Card>{" "}
           <Card className="bg-slate-700/50 border-slate-700 overflow-hidden mt-5">
             <CardHeader>
-              <CardTitle className="text-white">Incidents Overview</CardTitle>
+              <CardTitle className="text-white"> Incidents Overview </CardTitle>{" "}
               <CardDescription className="text-purple-300">
-                Last 7 Days
-              </CardDescription>
-            </CardHeader>
+                Last 7 Days{" "}
+              </CardDescription>{" "}
+            </CardHeader>{" "}
             <CardContent>
               <ChartContainer config={chartConfig}>
                 <ResponsiveContainer width="100%" height={300}>
@@ -382,9 +398,9 @@ export default function ProfilePage() {
                       tickLine={false}
                       tickMargin={10}
                       tickFormatter={(value) => value.slice(5)}
-                    />
-                    <YAxis axisLine={false} tickLine={false} tickMargin={10} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
+                    />{" "}
+                    <YAxis axisLine={false} tickLine={false} tickMargin={10} />{" "}
+                    <ChartTooltip content={<ChartTooltipContent />} />{" "}
                     <Line
                       type="monotone"
                       dataKey="incidents"
@@ -392,25 +408,24 @@ export default function ProfilePage() {
                       strokeWidth={2}
                       dot={{ r: 4 }}
                       activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
+                    />{" "}
+                  </LineChart>{" "}
+                </ResponsiveContainer>{" "}
+              </ChartContainer>{" "}
+            </CardContent>{" "}
             <CardFooter className="flex-col items-start gap-2 text-sm">
               <div className="leading-none text-muted-foreground">
-                Showing total incidents for the last 7 days
-              </div>
-            </CardFooter>
-          </Card>
-
+                Showing total incidents for the last 7 days{" "}
+              </div>{" "}
+            </CardFooter>{" "}
+          </Card>{" "}
           <Card className="mt-5 bg-slate-700/50 border-slate-700 overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-white">Aura Journey</CardTitle>
+              <CardTitle className="text-white"> Aura Journey </CardTitle>{" "}
               <CardDescription className="text-purple-300">
-                Last 7 Days
-              </CardDescription>
-            </CardHeader>
+                Last 7 Days{" "}
+              </CardDescription>{" "}
+            </CardHeader>{" "}
             <CardContent>
               <ChartContainer config={chartConfig}>
                 <AreaChart data={weeklyIncidents} height={300}>
@@ -426,13 +441,13 @@ export default function ProfilePage() {
                         offset="5%"
                         stopColor="var(--color-pos_aura)"
                         stopOpacity={0.8}
-                      />
+                      />{" "}
                       <stop
                         offset="95%"
                         stopColor="var(--color-pos_aura)"
                         stopOpacity={0}
-                      />
-                    </linearGradient>
+                      />{" "}
+                    </linearGradient>{" "}
                     <linearGradient
                       id="colorNegAura"
                       x1="0"
@@ -444,14 +459,14 @@ export default function ProfilePage() {
                         offset="5%"
                         stopColor="var(--color-neg_aura)"
                         stopOpacity={0.8}
-                      />
+                      />{" "}
                       <stop
                         offset="95%"
                         stopColor="var(--color-neg_aura)"
                         stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
+                      />{" "}
+                    </linearGradient>{" "}
+                  </defs>{" "}
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="date"
@@ -459,13 +474,13 @@ export default function ProfilePage() {
                     tickMargin={10}
                     axisLine={false}
                     tickFormatter={(value) => value.slice(5)}
-                  />
-                  <YAxis axisLine={false} tickLine={false} tickMargin={10} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  />{" "}
+                  <YAxis axisLine={false} tickLine={false} tickMargin={10} />{" "}
+                  <ChartTooltip content={<ChartTooltipContent />} />{" "}
                   <ChartLegend
                     className="text-white"
                     content={<ChartLegendContent />}
-                  />
+                  />{" "}
                   <ReferenceLine y={0} stroke="#666" />
                   <Area
                     type="monotone"
@@ -481,17 +496,17 @@ export default function ProfilePage() {
                     fillOpacity={1}
                     fill="url(#colorNegAura)"
                   />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
+                </AreaChart>{" "}
+              </ChartContainer>{" "}
+            </CardContent>{" "}
             <CardFooter className="flex-col items-start gap-2 text-sm">
               <div className="leading-none text-muted-foreground">
-                Showing your Aura points for the last 7 days
-              </div>
-            </CardFooter>
-          </Card>
-        </motion.div>
-      </main>
+                Showing your Aura points for the last 7 days{" "}
+              </div>{" "}
+            </CardFooter>{" "}
+          </Card>{" "}
+        </motion.div>{" "}
+      </main>{" "}
     </div>
   );
 }
