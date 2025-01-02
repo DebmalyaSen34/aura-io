@@ -133,6 +133,9 @@ export default function LoginPage() {
               {logging ? <AuraLoader /> : "Login"}
             </Button>
           </form>
+          <p className="text-xs text-slate-700 mt-2">
+            Note: If not redirected to home after login please RELOAD the page
+          </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <p className="text-sm text-center">
