@@ -125,6 +125,7 @@ function VerifyPageContent() {
                     name="otp"
                     maxLength="1"
                     value={data}
+                    inputMode="numeric"
                     className="w-12 h-12 text-center text-2xl"
                     onChange={(e) => handleChange(e.target, index)}
                     onKeyDown={(e) => handleKeyDown(e, index)}

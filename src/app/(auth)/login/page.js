@@ -31,7 +31,7 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let formErrors = [];
+    let formErrors = {};
 
     if (!validEmail(email)) {
       formErrors.push("Please enter a valid email address");
@@ -58,7 +58,7 @@ export default function LoginPage() {
         console.log(response.status);
 
         if (response.ok) {
-          router.push("/home");
+          router.push("/home", { replace: true });
         } else if (response.status === 401) {
           setError({
             password: "Invalid password!",
@@ -129,7 +129,7 @@ export default function LoginPage() {
             {error.login && (
               <p className="text-red-500 text-xs mt-2">{error.login}</p>
             )}
-            <Button className="w-full mt-6">
+            <Button type="submit" className="w-full mt-6">
               {logging ? <AuraLoader /> : "Login"}
             </Button>
           </form>

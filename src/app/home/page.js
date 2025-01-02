@@ -30,6 +30,7 @@ import { formatDateBetter } from "@/utils/changeDateToReadable";
 import { capitalizeNames } from "@/utils/capitalizeWords";
 import { handleVote, getVotesfromCache } from "@/utils/voteHandler";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const INCIDENTS_PER_PAGE = 6;
 
@@ -44,6 +45,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [auraPoints, setAuraPoints] = useState(null);
   const router = useRouter();
+  const toast = useToast();
 
   const observer = useRef();
   const lastIncidentElementRef = useCallback(
@@ -60,28 +62,36 @@ export default function HomePage() {
     [loading, hasMore]
   );
 
-  const fetchIncidents = async (pageNumber) => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `/api/user/homePage?page=${pageNumber}&limit=${INCIDENTS_PER_PAGE}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch incidents");
+  const fetchIncidents = useCallback(
+    async (pageNumber) => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/user/homePage?page=${pageNumber}&limit=${INCIDENTS_PER_PAGE}`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch incidents");
+        }
+        const data = await response.json();
+        if (data.success) {
+          setIncidents((prev) => [...prev, ...data.incidents]);
+          setHasMore(data.incidents.length === INCIDENTS_PER_PAGE);
+        } else {
+          throw new Error(data.message || "Failed to fetch incidents");
+        }
+      } catch (error) {
+        console.error("Error fetching incidents:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch incidents. Try again later!",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      const data = await response.json();
-      if (data.success) {
-        setIncidents((prev) => [...prev, ...data.incidents]);
-        setHasMore(data.incidents.length === INCIDENTS_PER_PAGE);
-      } else {
-        throw new Error(data.message || "Failed to fetch incidents");
-      }
-    } catch (error) {
-      console.error("Error fetching incidents:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [toast]
+  );
 
   useEffect(() => {
     fetchIncidents(page);
