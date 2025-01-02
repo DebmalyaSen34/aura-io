@@ -30,6 +30,7 @@ import { formatDateBetter } from "@/utils/changeDateToReadable";
 import { capitalizeNames } from "@/utils/capitalizeWords";
 import { handleVote, getVotesfromCache } from "@/utils/voteHandler";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const INCIDENTS_PER_PAGE = 6;
 
@@ -43,9 +44,11 @@ export default function HomePage() {
   const [newIncident, setNewIncident] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [auraPoints, setAuraPoints] = useState(null);
-  const router = useRouter();
 
+  const { toast } = useToast();
+  const router = useRouter();
   const observer = useRef();
+
   const lastIncidentElementRef = useCallback(
     (node) => {
       if (loading) return;
@@ -93,41 +96,43 @@ export default function HomePage() {
   }, []);
 
   const toggleVote = async (id, voteType) => {
-    setVotes((prevVotes) => {
-      const newVotes = { ...prevVotes };
-      if (newVotes[id]?.type === voteType) {
-        delete newVotes[id];
-      } else {
-        newVotes[id] = { type: voteType };
-      }
-      // handleVote(id, voteType);
-      return newVotes;
-    });
-
+    const currentVote = votes[id]?.type;
     try {
-      await handleVote(id, voteType);
-
-      setIncidents((prevIncidents) =>
-        prevIncidents.map((incident) =>
-          incident.id === id
-            ? {
-                ...incident,
-                userVote: voteType,
-                total_ups:
-                  incident.total_ups + (voteType === ("up" || true) ? 1 : 0),
-                total_downs:
-                  incident.total_downs +
-                  (voteType === ("down" || false) ? 1 : 0),
-              }
-            : incident
-        )
+      const { upvotes, downvotes, userVote } = await handleVote(
+        id,
+        voteType,
+        currentVote
       );
-    } catch (error) {
-      console.error("Error while updating vote in database: ", error);
+
       setVotes((prevVotes) => {
         const newVotes = { ...prevVotes };
-        delete newVotes[id];
+        if (userVote === null) {
+          delete newVotes[id];
+        } else {
+          newVotes[id] = { type: userVote };
+        }
         return newVotes;
+      });
+
+      setIncidents((prevIncidents) => {
+        return prevIncidents.map((incident) => {
+          if (incident.id === id) {
+            return {
+              ...incident,
+              userVote,
+              total_ups: upvotes,
+              total_downs: downvotes,
+            };
+          }
+          return incident;
+        });
+      });
+    } catch (error) {
+      console.error("Error while updating vote in database: ", error);
+      toast({
+        title: "Error",
+        description: "Failed to update vote. Please try again later.",
+        variant: "destructive",
       });
     }
   };
@@ -172,9 +177,22 @@ export default function HomePage() {
         throw new Error("Failed to post incident");
       }
 
+      toast({
+        title: "Success",
+        description: "Incident added successfully",
+      });
+
+      setNewIncident("");
+      setShowAddIncident(false);
+
       console.log("Incident added successfully");
     } catch (error) {
       console.error("Error adding incident:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add incident. Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

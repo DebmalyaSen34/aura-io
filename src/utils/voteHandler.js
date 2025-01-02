@@ -23,9 +23,8 @@ async function fetchWithRetry(url, options, retries = 3, delays = 1000) {
       }
     } catch (error) {
       if (i < retries - 1) {
-        console.warn(`Retrying in (${i + 1}/${retries})...`);
+        console.warn(`Retrying in ${delays}ms (${i + 1}/${retries})...`);
         await new Promise((resolve) => setTimeout(resolve, delays));
-        throw new Error("Max retries reached");
       } else {
         throw error;
       }
@@ -43,18 +42,52 @@ const updateVoteInDatabase = debounce(async (incidentId, voteType) => {
       },
     });
 
-    const cachedVotes = getVotesfromCache();
-    delete cachedVotes[incidentId];
-    setVotesToCache(cachedVotes);
+    if (response.ok) {
+      const { data } = await response.json();
+
+      console.log("VoteHandler Data: ", data);
+
+      return data;
+    } else {
+      throw new Error("Failed to update vote in database");
+    }
+
+    // const cachedVotes = getVotesfromCache();
+    // delete cachedVotes[incidentId];
+    // setVotesToCache(cachedVotes);
   } catch (error) {
     console.error("Error while updating vote in database: ", error);
+    throw error;
   }
-}, 5000);
+}, 1000);
 
-export const handleVote = (incidentId, voteType) => {
+export const handleVote = async (incidentId, voteType, currentVote) => {
   const cachedVotes = getVotesfromCache();
-  cachedVotes[incidentId] = { type: voteType };
+  let newVoteType;
+
+  if (currentVote === voteType) {
+    delete cachedVotes[incidentId];
+    newVoteType = null;
+  } else {
+    cachedVotes[incidentId] = { type: voteType };
+    newVoteType = voteType;
+  }
+
   setVotesToCache(cachedVotes);
 
-  updateVoteInDatabase(incidentId, voteType);
+  try {
+    const { upvotes, downvotes, user_vote } = updateVoteInDatabase(
+      incidentId,
+      newVoteType
+    );
+    return { upvotes, downvotes, user_vote };
+  } catch (error) {
+    if (newVoteType === null) {
+      cachedVotes[incidentId] = { type: currentVote };
+    } else {
+      delete cachedVotes[incidentId];
+    }
+    setVotesToCache(cachedVotes);
+    throw error;
+  }
 };
