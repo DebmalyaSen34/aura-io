@@ -32,7 +32,7 @@ export async function POST(request) {
 
     if (!isPasswordValid) {
       return NextResponse.json(
-        { message: "Invalid password" },
+        { success: false, message: "Invalid password" },
         { status: 401 }
       );
     }
@@ -45,7 +45,7 @@ export async function POST(request) {
 
     // Create the response
     const response = NextResponse.json(
-      { message: "User successfully logged in!" },
+      { success: true, message: "User successfully logged in!" },
       { status: 200 }
     );
 

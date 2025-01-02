@@ -32,10 +32,16 @@ export default function RegisterPage() {
     return re.test(email);
   };
 
+  const validPassword = (password) => {
+    const re =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return re.test(password);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    let formErrors = [];
+    let formErrors = {};
 
     if (!validEmail(email)) {
       formErrors.push("Please enter a valid email address");
@@ -43,6 +49,19 @@ export default function RegisterPage() {
 
     if (password !== confirmPassword) {
       formErrors.password = "Passwords must match.";
+    }
+
+    if (/\s/.test(password)) {
+      formErrors.password = "Password must not contain spaces.";
+    }
+
+    if (!validPassword(password)) {
+      formErrors.password =
+        "Password must contain at one uppercase, one lowercase, one number and one special character.";
+    }
+
+    if (password.length < 8) {
+      formErrors.password = "Password must contain at least 8 characters.";
     }
 
     setError(formErrors);
@@ -128,6 +147,13 @@ export default function RegisterPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <p className="text-xs text-slate-500">
+                  Must atleast contain 8 letters, 1 uppercase letter, 1
+                  lowercase letter, 1 number and 1 special character
+                </p>
+                {error.password && (
+                  <p className="text-red-500 text-sm">{error.password}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>

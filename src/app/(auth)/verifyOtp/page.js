@@ -17,8 +17,10 @@ import AuraLoader from "@/components/common/AuraLoader";
 function VerifyPageContent() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const [error, setError] = useState({});
 
   const searchParams = useSearchParams();
 
@@ -37,17 +39,28 @@ function VerifyPageContent() {
     } else {
       console.error("Email not found in URL parameters");
       // Optionally redirect to login page if email is not present
-      // router.push('/login')
+      router.push("/login");
     }
   }, [searchParams]);
 
   const handleChange = (element, index) => {
-    if (isNaN(element.value)) return false;
+    if (isNaN(element.value)) return;
 
-    setOtp([...otp.map((d, idx) => (idx === index ? element.value : d))]);
+    let newOtp = [...otp];
+    newOtp[index] = element.value;
+    setOtp(newOtp);
 
-    if (element.nextSibling) {
-      element.nextSibling.focus();
+    // Move to the next input field if the current one is filled
+    if (element.value !== "" && index < otp.length - 1) {
+      document.getElementById(`otp-input-${index + 1}`).focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && otp[index] === "") {
+      if (index > 0) {
+        document.getElementById(`otp-input-${index - 1}`).focus();
+      }
     }
   };
 
@@ -71,8 +84,16 @@ function VerifyPageContent() {
       if (response.ok) {
         console.log("OTP verification was successful!", data);
         router.push("/home");
-      } else {
+      } else if (response.status === 401) {
         console.error("There was an error while verifying OTP: ", data);
+        setError({
+          verficationError: "Wrong OTP provided! Check your OTP.",
+        });
+      } else {
+        setError({
+          verificationError:
+            "There was something wrong while verifying your OTP. Please try again!",
+        });
       }
     } catch (error) {
       console.error("Error while verifying OTP: ", error);
@@ -98,6 +119,7 @@ function VerifyPageContent() {
               {otp.map((data, index) => {
                 return (
                   <Input
+                    id={`otp-input-${index}`}
                     key={index}
                     type="text"
                     name="otp"
@@ -105,23 +127,30 @@ function VerifyPageContent() {
                     value={data}
                     className="w-12 h-12 text-center text-2xl"
                     onChange={(e) => handleChange(e.target, index)}
+                    onKeyDown={(e) => handleKeyDown(e, index)}
                     onFocus={(e) => e.target.select()}
                   />
                 );
               })}
             </div>
+            {error.verificationError && (
+              <p className="text-red-500 text-sm text-center">
+                {error.verificationError}
+              </p>
+            )}
             <Button type="submit" className="w-full">
               {isLoading ? <AuraLoader /> : "Verify"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-center">
+          {/* Find a better way to resend OTPs */}
+          {/* <p className="text-sm text-center">
             Didn't receive the code?{" "}
             <Button variant="link" className="p-0">
               Resend
             </Button>
-          </p>
+          </p> */}
         </CardFooter>
       </Card>
     </div>

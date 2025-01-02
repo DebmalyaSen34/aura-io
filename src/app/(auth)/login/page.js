@@ -55,17 +55,32 @@ export default function LoginPage() {
 
         const data = await response.json();
 
+        console.log(response.status);
+
         if (response.ok) {
           router.push("/home");
+        } else if (response.status === 401) {
+          setError({
+            password: "Invalid password!",
+          });
+        } else if (response.status === 404) {
+          setError({
+            email: "Invalid email address!",
+          });
         } else {
+          setError({
+            login: data.message || "Error while logging in. Try reloading!",
+          });
           console.error("Error while logging in!", data);
         }
       } catch (error) {
+        setError({
+          login: "Unexpected Error occurred. Please try again!",
+        });
         console.error("Unexpected Error: ", error);
       } finally {
         setLogging(false);
       }
-      console.log("Logged in successfully!");
     }
   };
 
@@ -106,8 +121,14 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                {error.password && (
+                  <p className="text-red-500 text-xs mt-2">{error.password}</p>
+                )}
               </div>
             </div>
+            {error.login && (
+              <p className="text-red-500 text-xs mt-2">{error.login}</p>
+            )}
             <Button className="w-full mt-6">
               {logging ? <AuraLoader /> : "Login"}
             </Button>
